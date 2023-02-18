@@ -1,0 +1,26 @@
+{
+    //
+    // Basic information.
+    //
+    name: "The Experimental BBS",
+    admin: "Dan Cross <cross@fat-dragon.org>",
+    host: "fat-dragon.org",
+    port: 22,
+    //
+    // Conferences.
+    //
+    conferences: [
+        {
+            name: "local", subdir: "local", title: "Local Conferences",
+            moderators: [ "cross" ], acls: [ "all" ],
+            conferences: [
+                { name: "general", subdir: "general", title: "General Chatter",
+                    moderators: [ "cross" ], acls: [ "all" ]
+                },
+                { name: "hack", subdir: "hack00", title: "Hacking",
+                    moderators: [ "cross" ], acls: [ "all" ]
+                }
+            ]
+        }
+    ]
+}
