@@ -1,0 +1,11 @@
+ann
+    "allowFFI true"
+in
+    local
+        $(SML_LIB)/basis/basis.mlb
+        $(SML_LIB)/basis/mlton.mlb
+        ncurses.sml
+    in
+        structure NCurses
+    end
+end

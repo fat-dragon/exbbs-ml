@@ -1,0 +1,2 @@
+#!/bin/sh
+mlton -link-opt -lncurses -export-header ffi.h ncurses.mlb ffi.c
