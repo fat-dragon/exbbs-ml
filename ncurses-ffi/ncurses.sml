@@ -12,11 +12,17 @@ structure NCurses = struct
         val endwin = _import "mffi_endwin": unit -> unit;
         val wrefresh = _import "mffi_wrefresh": Win -> unit;
 
-        val subwin = _import "mffi_subwin": (Win * int * int * int * int) -> Win;
-        val delwin = _import "mffi_delin": Win -> unit;
+        val newwin = _import "mffi_newwin": (int * int * int * int) -> Win;
+        val derwin = _import "mffi_derwin": (Win * int * int * int * int) -> Win;
+        val delwin = _import "mffi_delwin": Win -> unit;
         val box = _import "mffi_box": (Win * int * int) -> unit;
+        val wborder = _import "mffi_wborder":
+                (Win * int * int * int * int * int * int * int * int ) -> unit;
+        val wmove = _import "mffi_wmove": Win * int * int -> unit;
+        val touchwin = _import "mffi_touchwin": Win -> unit;
 
         val wgetch = _import "mffi_wgetch": Win -> char;
+        val waddnstr = _import "mffi_waddnstr": Win * string * int -> unit;
         val has_colors = _import "mffi_has_colors": unit -> int;
         val start_color = _import "mffi_start_color": unit -> unit;
         val printcolors = _import "mffi_printcolors": unit -> unit;
@@ -37,32 +43,48 @@ structure NCurses = struct
     datatype width = Width of int
     datatype pos = Pos of int * int
 
-    fun init () = let
+    fun init () =
+        let
             val win = FFI.initscr ();
             val () = FFI.cbreak ();
             val () = FFI.noecho ();
             val () = FFI.wclear win;
             val () = if (FFI.has_colors () = 1) then FFI.start_color () else ();
-        in
-            win
+        in win
         end
 
-    fun subwin win (Pos (x, y)) (Height h) (Width w) = FFI.subwin (win, h, w, y, x)
+    fun newwin (Pos (y, x)) (Height h) (Width w) = FFI.newwin (h, w, y, x)
+    fun subwin win (Pos (y, x)) (Height h) (Width w) = FFI.derwin (win, h, w, y, x)
     fun box win = FFI.box (win, 0, 0)
 
     val refresh = FFI.wrefresh
 
-    val delwin = FFI.delwin
+    fun delwin win =
+        let
+            val SP = Char.ord #" "
+        in
+            FFI.wborder (win, SP, SP, SP, SP, SP, SP, SP, SP);
+            FFI.wrefresh win;
+            FFI.delwin win
+        end
 
     val shutdown = FFI.endwin
     val getch = FFI.wgetch
+    fun putstr win s = FFI.waddnstr (win, s, size s)
+    fun move win (Pos (y, x)) = FFI.wmove (win, y, x)
+    val touch = FFI.touchwin
 end
 
 structure NC = NCurses
 
 val win = NC.init ()
-val sw = NC.subwin win (NC.Pos (10, 10)) (NC.Height 10) (NC.Width 30)
+val sw = NC.newwin (NC.Pos (10, 10)) (NC.Height 10) (NC.Width 30)
 val _ = NC.box sw
+val _ = NC.move sw (NC.Pos (1, 1))
+val _ = NC.putstr sw "This is a test"
+val _ = NC.refresh sw
+val c = NC.getch sw
+val _ = NC.delwin sw
 val _ = NC.refresh win
 val c = NC.getch win
 val _ = NC.shutdown ()

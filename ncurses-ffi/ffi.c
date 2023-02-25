@@ -137,18 +137,38 @@ void *mffi_initscr(void) { return initscr(); }
 void mffi_noecho(void) { try(noecho(), "noecho failed\n"); }
 void mffi_cbreak(void) { try(cbreak(), "cbreak failed\n"); }
 void mffi_wclear(void *win) { try(wclear(win), "clear failed\n"); }
+void mffi_delwin(void *win) { try(delwin(win), "delwin failed\n"); }
 void mffi_endwin(void) { try(endwin(), "endwin failed\n"); }
+void mffi_wmove(void *win, int y, int x) { try(wmove(win, y, x), "wmove failed\n"); }
 
 int mffi_wgetch(void *win) { return try(wgetch(win), "fetch failed\n"); }
-void *
-mffi_subwin(void *win, int h, int w, int y, int x)
+void
+mffi_waddnstr(void *win, const char *s, int n)
 {
-	return tryp(subwin(win, h, w, y, x),
+	try(waddnstr(win, s, n), "waddnstr failed");
+}
+
+void *
+mffi_newwin(int h, int w, int y, int x)
+{
+	return tryp(newwin(h, w, y, x),
+	    "subwin(%d, %d, %d, %d) failed", h, w, y, x);
+}
+void *
+mffi_derwin(void *win, int h, int w, int y, int x)
+{
+	return tryp(derwin(win, h, w, y, x),
 	    "subwin(%p, %d, %d, %d, %d) failed",
 	    win, h, w, y, x);
 }
 void mffi_box(void *win, int vch, int hch) { try(box(win, vch, hch), "box failed\n"); }
+void
+mffi_wborder(void *win, int l, int r, int u, int b, int ul, int ur, int bl, int br)
+{
+	try(wborder(win, l, r, u, b, ul, ur, bl, br), "wborder failed\n");
+}
 void mffi_wrefresh(void *win) { try(wrefresh(win), "wrefresh failed\n"); }
+void mffi_touchwin(void *win) { WINDOW *w = win; try(touchwin(w), "touchwin failed\n"); }
 
 int mffi_has_colors(void) { return has_colors() == TRUE; }
 void mffi_start_color(void) { try(start_color(), "start_color failed\n"); }
