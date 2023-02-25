@@ -44,8 +44,7 @@ structure NCurses = struct
     datatype pos = Pos of int * int
 
     fun init () =
-        let
-            val win = FFI.initscr ();
+        let val win = FFI.initscr ();
             val () = FFI.cbreak ();
             val () = FFI.noecho ();
             val () = FFI.wclear win;
@@ -60,10 +59,8 @@ structure NCurses = struct
     val refresh = FFI.wrefresh
 
     fun delwin win =
-        let
-            val SP = Char.ord #" "
-        in
-            FFI.wborder (win, SP, SP, SP, SP, SP, SP, SP, SP);
+        let val SP = Char.ord #" "
+        in  FFI.wborder (win, SP, SP, SP, SP, SP, SP, SP, SP);
             FFI.wrefresh win;
             FFI.delwin win
         end

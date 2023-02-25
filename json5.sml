@@ -92,8 +92,7 @@ structure JSON5 :> JSON5 = struct
               | loop (SOME(c, cs)) tcs =
                     if c = q then (toString tcs, cs) else loop (next cs) (c::tcs)
             val (token, cs') = loop (next cs) []
-        in
-            (TokStr token, skipWS cs')
+        in  (TokStr token, skipWS cs')
         end
     and scanNumber c cs =
         let fun isNumChar c =
@@ -111,20 +110,19 @@ structure JSON5 :> JSON5 = struct
                         if Substring.isEmpty after then SOME(value) else NONE
             val (word, cs') = Substring.splitl isNumChar cs
             val wordStr = Substring.string word
-        in
-            if wordStr = "+Infinity" then (TokReal Real.posInf, cs')
+        in  if wordStr = "+Infinity" then (TokReal Real.posInf, cs')
             else if wordStr = "-Infinity" then (TokReal Real.negInf, cs')
             else if (Substring.isPrefix "0x" word) orelse (Substring.isPrefix "0X" word) then
                 case scanInt word StringCvt.HEX of
-                    NONE => raise Exception("Bad hex string")
-                  | SOME(value) => (TokInt value, cs')
+                     NONE => raise Exception("Bad hex string")
+                   | SOME(value) => (TokInt value, cs')
             else
                 case scanInt word StringCvt.DEC of
-                    SOME(value) => (TokInt value, cs')
-                  | NONE =>
-                        case scanReal word of
-                            NONE => raise Exception("bad number")
-                          | SOME(value) => (TokReal value, cs')
+                     SOME(value) => (TokInt value, cs')
+                   | NONE =>
+                         case scanReal word of
+                              NONE => raise Exception("bad number")
+                            | SOME(value) => (TokReal value, cs')
         end
     and scanComment cs =
         let val terminator =
@@ -132,19 +130,16 @@ structure JSON5 :> JSON5 = struct
                 else if Substring.isPrefix "/*" cs then "*/"
                 else raise Exception("Bad comment")
             val (_, cs) = Substring.position terminator cs
-        in
-            if terminator = "*/" andalso not (Substring.isPrefix terminator cs)
+        in  if terminator = "*/" andalso not (Substring.isPrefix terminator cs)
             then raise Exception "unterminated comment"
             else scan (Substring.triml (String.size terminator) cs)
         end
     and scanWord cs =
-        let
-            fun isWord c = Char.isAlpha c orelse Char.isDigit c orelse
+        let fun isWord c = Char.isAlpha c orelse Char.isDigit c orelse
                     c = #"_" orelse c = #"$"
             val (tcs, cs') = Substring.splitl isWord cs
             val token = Substring.string tcs
-        in
-            case token of
+        in  case token of
                 "null" => (TokNull, cs')
               | "true" => (TokBool true, cs')
               | "false" => (TokBool false, cs')
@@ -154,13 +149,11 @@ structure JSON5 :> JSON5 = struct
         end
 
     fun tokenize s =
-        let
-            fun scanLoop cs ts =
+        let fun scanLoop cs ts =
                 case scan cs of
                     NONE => List.rev ts
                   | SOME(token, cs') => scanLoop cs' (token::ts)
-        in
-            scanLoop (Substring.full s) []
+        in  scanLoop (Substring.full s) []
         end
 
     fun findValue matcher os =
@@ -195,8 +188,7 @@ structure JSON5 :> JSON5 = struct
             unwrapInt (extractValueById key (unwrapObject obj))
 
     fun parse s =
-        let
-            fun matchColon (TokColon::ts) = ts
+        let fun matchColon (TokColon::ts) = ts
               | matchColon _ = raise Exception "match failed"
 
             fun parse [] = (Null, [])
@@ -210,13 +202,11 @@ structure JSON5 :> JSON5 = struct
               | parse (_::ts) = raise Exception("Unexpected token in parse")
             and parseObj (TokRBrace::ts) kvs = (Object (List.rev kvs), ts)
               | parseObj ts kvs =
-                let
-                    val (key, ts) = parseKey ts
+                let val (key, ts) = parseKey ts
                     val ts = matchColon(ts)
                     val (value, ts) = parse(ts)
                     val kv = (key, value)
-                in
-                    parseObjTail ts (kv::kvs)
+                in  parseObjTail ts (kv::kvs)
                 end
             and parseKey (TokStr s::ts) = (KeyString s, ts)
               | parseKey (TokId id::ts) = (KeyIdentifier id, ts)
@@ -235,7 +225,6 @@ structure JSON5 :> JSON5 = struct
                 case parse ts of
                     (object, []) => object
                   | (object, _) => raise Exception("malformed object")
-        in
-            parseSingleObj (tokenize s)
+        in  parseSingleObj (tokenize s)
         end
 end

@@ -99,8 +99,7 @@ structure Terminal = struct
      * input, etc.
      *)
     fun setTermMode fd =
-        let
-            open Posix.TTY
+        let open Posix.TTY
 
             (* Retrieve existing terminal attributes *)
             val attr = TC.getattr fd
@@ -141,12 +140,11 @@ structure Terminal = struct
                     ispeed = CF.getispeed attr,
                     ospeed = CF.getospeed attr
                 }
-        in
-            TC.setattr (fd, TC.sanow, rawModeAttr);
+        in  TC.setattr (fd, TC.sanow, rawModeAttr);
             attr
         end
 
     (* Resets terminal attributes to specified values. *)
     fun resetTerm fd attrs =
-        Posix.TTY.TC.setattr (fd, Posix.TTY.TC.sanow, attrs)
+            Posix.TTY.TC.setattr (fd, Posix.TTY.TC.sanow, attrs)
 end
