@@ -6,6 +6,7 @@
     admin: "Dan Cross <cross@fat-dragon.org>",
     host: "fat-dragon.org",
     port: 22,
+    proto: "ssh",
     //
     // Conferences.
     //

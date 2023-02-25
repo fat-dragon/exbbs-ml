@@ -7,7 +7,8 @@ structure Config = struct
         { name: string,
           admin: string,
           host: string,
-          port: int }
+          port: int,
+          proto: string  }
 
     fun parse(text: string): Config =
         let
@@ -16,7 +17,8 @@ structure Config = struct
             { name = (JSON5.idToString "name" json5Config),
               admin = (JSON5.idToString "admin" json5Config),
               host = (JSON5.idToString "host" json5Config),
-              port = (JSON5.idToInt "port" json5Config) }
+              port = (JSON5.idToInt "port" json5Config),
+              proto = (JSON5.idToString "proto" json5Config) }
         end
 
     fun read(file: string): Config =
