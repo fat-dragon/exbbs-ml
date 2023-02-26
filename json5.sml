@@ -183,9 +183,9 @@ structure JSON5 :> JSON5 = struct
       | unwrapArray _ = raise Exception "Value is not an Array"
 
     fun idToString key obj =
-            unwrapString (extractValueById key (unwrapObject obj))
+        unwrapString (extractValueById key (unwrapObject obj))
     fun idToInt key obj =
-            unwrapInt (extractValueById key (unwrapObject obj))
+        unwrapInt (extractValueById key (unwrapObject obj))
 
     fun parse s =
         let fun matchColon (TokColon::ts) = ts

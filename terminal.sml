@@ -146,5 +146,5 @@ structure Terminal = struct
 
     (* Resets terminal attributes to specified values. *)
     fun resetTerm fd attrs =
-            Posix.TTY.TC.setattr (fd, Posix.TTY.TC.sanow, attrs)
+        Posix.TTY.TC.setattr (fd, Posix.TTY.TC.sanow, attrs)
 end
