@@ -19,4 +19,4 @@ fun main() =
         Terminal.resetTerm Posix.FileSys.stdin savedTermMode
     end
 
-val _ = main()
+val () = main()

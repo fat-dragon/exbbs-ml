@@ -44,12 +44,12 @@ structure NCurses = struct
     datatype pos = Pos of int * int
 
     fun init () =
-        let val win = FFI.initscr ();
-            val () = FFI.cbreak ();
-            val () = FFI.noecho ();
-            val () = FFI.wclear win;
-            val () = if (FFI.has_colors () = 1) then FFI.start_color () else ();
-        in win
+        let val win = FFI.initscr ()
+        in  FFI.cbreak ();
+            FFI.noecho ();
+            FFI.wclear win;
+            if (FFI.has_colors () = 1) then FFI.start_color () else ();
+            win
         end
 
     fun newwin (Pos (y, x)) (Height h) (Width w) = FFI.newwin (h, w, y, x)
@@ -60,8 +60,8 @@ structure NCurses = struct
 
     fun delwin win =
         let val SP = Char.ord #" "
-        in  FFI.wborder (win, SP, SP, SP, SP, SP, SP, SP, SP);
-            FFI.wrefresh win;
+        in  (*FFI.wborder (win, SP, SP, SP, SP, SP, SP, SP, SP);
+            FFI.wrefresh win;*)
             FFI.delwin win
         end
 
@@ -72,16 +72,17 @@ structure NCurses = struct
     val touch = FFI.touchwin
 end
 
-structure NC = NCurses
+structure NC = NCurses;
 
-val win = NC.init ()
-val sw = NC.newwin (NC.Pos (10, 10)) (NC.Height 10) (NC.Width 30)
-val _ = NC.box sw
-val _ = NC.move sw (NC.Pos (1, 1))
-val _ = NC.putstr sw "This is a test"
-val _ = NC.refresh sw
-val c = NC.getch sw
-val _ = NC.delwin sw
-val _ = NC.refresh win
-val c = NC.getch win
-val _ = NC.shutdown ()
+let val win = NC.init ();
+    val sw = NC.newwin (NC.Pos (10, 10)) (NC.Height 10) (NC.Width 30);
+in  NC.box sw;
+    NC.move sw (NC.Pos (1, 1));
+    NC.putstr sw "This is a test";
+    NC.refresh sw;
+    NC.getch sw;
+    NC.delwin sw;
+    NC.refresh win;
+    NC.getch win;
+    NC.shutdown ()
+end
