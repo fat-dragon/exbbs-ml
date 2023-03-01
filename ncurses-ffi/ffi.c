@@ -4,6 +4,7 @@
 
 #include <assert.h>
 #include <curses.h>
+#include <locale.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -133,8 +134,11 @@ tryp(void *p, const char *fmt, ...)
 	exit(EXIT_FAILURE);
 }
 
+void mffi_setlocale() { setlocale(LC_ALL, ""); }
+
 void *mffi_initscr(void) { return initscr(); }
 void mffi_noecho(void) { try(noecho(), "noecho failed\n"); }
+void mffi_echo(void) { try(echo(), "echo failed\n"); }
 void mffi_cbreak(void) { try(cbreak(), "cbreak failed\n"); }
 void mffi_wclear(void *win) { try(wclear(win), "clear failed\n"); }
 void mffi_delwin(void *win) { try(delwin(win), "delwin failed\n"); }
@@ -142,6 +146,12 @@ void mffi_endwin(void) { try(endwin(), "endwin failed\n"); }
 void mffi_wmove(void *win, int y, int x) { try(wmove(win, y, x), "wmove failed\n"); }
 
 int mffi_wgetch(void *win) { return try(wgetch(win), "fetch failed\n"); }
+void
+mffi_wgetnstr(void *win, void *p, int n)
+{
+	try(wgetnstr(win, p, n), "wgetnstr failed");
+}
+
 void
 mffi_waddnstr(void *win, const char *s, int n)
 {
@@ -168,13 +178,9 @@ mffi_wborder(void *win, int l, int r, int u, int b, int ul, int ur, int bl, int 
 	try(wborder(win, l, r, u, b, ul, ur, bl, br), "wborder failed\n");
 }
 void mffi_wrefresh(void *win) { try(wrefresh(win), "wrefresh failed\n"); }
+void mffi_wnoutrefresh(void *win) { try(wnoutrefresh(win), "wnoutrefresh failed\n"); }
+void mffi_doupdate(void) { try(doupdate(), "doupdate failed\n"); }
 void mffi_touchwin(void *win) { WINDOW *w = win; try(touchwin(w), "touchwin failed\n"); }
 
 int mffi_has_colors(void) { return has_colors() == TRUE; }
 void mffi_start_color(void) { try(start_color(), "start_color failed\n"); }
-
-void
-mffi_printcolors(void)
-{
-	printf("COLORS = %d, COLOR_PAIRS = %d\n", COLORS, COLOR_PAIRS);
-}
