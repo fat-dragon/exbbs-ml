@@ -11,10 +11,13 @@ structure NCurses = struct
         val noecho = _import "mffi_noecho": unit -> unit;
         val echo = _import "mffi_echo": unit -> unit;
         val wclear = _import "mffi_wclear": Win -> unit;
+        val idlok = _import "mffi_idlok": Win -> unit;
+        val scrollok = _import "mffi_scrollok": Win -> unit;
         val endwin = _import "mffi_endwin": unit -> unit;
         val wrefresh = _import "mffi_wrefresh": Win -> unit;
         val wnoutrefresh = _import "mffi_wnoutrefresh": Win -> unit;
         val doupdate = _import "mffi_doupdate": unit -> unit;
+        val resizeterm = _import "mffi_resizeterm": (int * int) -> unit;
 
         val newwin = _import "mffi_newwin": (int * int * int * int) -> Win;
         val derwin = _import "mffi_derwin": (Win * int * int * int * int) -> Win;
@@ -86,6 +89,12 @@ structure NCurses = struct
         val ACS_SBSB = _import "MFFI_ACS_SBSB": unit -> int;
         val ACS_SSSS = _import "MFFI_ACS_SSSS": unit -> int;
 
+        (* Tracking window size *)
+        val LINES = _import "MFFI_LINES": unit -> int;
+        val COLS = _import "MFFI_COLS": unit -> int;
+
+	val KEY_RESIZE = _import "MFFI_KEY_RESIZE": unit -> int;
+
         val NUL = C_UChar.fromInt 0x0
         val EOF = 0x4
         val NL = 0xA
@@ -156,6 +165,8 @@ structure NCurses = struct
         fun Space () = FFI.SP
     end
 
+    fun dim () = (FFI.LINES (), FFI.COLS ())
+
     type Win = FFI.Win
 
     datatype height = Ht of int
@@ -164,6 +175,8 @@ structure NCurses = struct
 
     val NUL = #"\000"
     val EOF = #"\004"
+    val BS = #"\b"
+    val DEL = #"\b"
     val NL = #"\n"
     val CR = #"\r"
     val SP = #" "
@@ -190,7 +203,7 @@ structure NCurses = struct
                 (ord l), (ord r), (ord t), (ord b),
                 (ord ul), (ord ur), (ord ll), (ord lr))
         end
-    val wclear = FFI.wclear
+    val clear = FFI.wclear
     val delwin = FFI.delwin
 
     val refresh = FFI.wrefresh
@@ -212,27 +225,56 @@ structure NCurses = struct
         let val buf = Array.array (maxLen, FFI.NUL)
         in  FFIUtils.cstrToString (wreadln win buf)
         end
+    fun readline win =
+        let fun next () = getche win
+            fun loop #"\004" cs = cs
+              | loop #"\n" cs = cs
+              | loop #"\r" cs = cs
+              | loop #"\b" [] = loop (next ()) []
+              | loop #"\b" (c::cs) = loop (next ()) cs
+              | loop c cs = loop (next ()) (c::cs)
+            val line = loop (next ()) []
+        in  String.implode (List.rev line)
+        end
     fun move win (Pos (y, x)) = FFI.wmove (win, y, x)
     val touch = FFI.touchwin
     val update = FFI.wnoutrefresh
     val flush = FFI.doupdate
+
+    fun scrolling w = (FFI.idlok w; FFI.scrollok w)
 end
 
 structure NC = NCurses;
 
 let val w = NC.init ();
-    val prompt = "CHOICE ===> ";
-    val statusPos = NC.Pos (17, 1);
-    val promptPos = NC.Pos (22, 1);
-    val systemPos = NC.Pos (23, 66);
-    val mw = NC.newwin (NC.Pos (0, 1)) (NC.Ht 18) (NC.Wd 78);
-    val tw = NC.newwin statusPos (NC.Ht 5) (NC.Wd 78)
-    val pw = NC.newwin promptPos (NC.Ht 1) (NC.Wd 79)
-    val iw = NC.subwin pw (NC.Pos (0, size prompt)) (NC.Ht 1) (NC.Wd 66)
+    val prompt = "CHOICE ===> "
+    val (lines, columns) = NC.dim ()
+    val statusPos = NC.Pos (lines - 7, 1)
+    val promptPos = NC.Pos (lines - 2, 1)
+    val systemPos = NC.Pos (lines - 1, columns - 14)
+    val menuHt = lines - 7 + 1
+    val menuWd = columns - 2
+    val mw = NC.newwin (NC.Pos (0, 1)) (NC.Ht menuHt) (NC.Wd menuWd)
+    val menu = NC.subwin mw (NC.Pos (1, 2)) (NC.Ht (menuHt - 2)) (NC.Wd (menuWd - 4))
+    val tw = NC.newwin statusPos (NC.Ht 5) (NC.Wd menuWd)
+    val pw = NC.newwin promptPos (NC.Ht 1) (NC.Wd menuWd)
+    val iw = NC.subwin pw (NC.Pos (0, size prompt)) (NC.Ht 1) (NC.Wd (menuWd - 14))
     val sw = NC.newwin systemPos (NC.Ht 1) (NC.Wd 20)
+    fun loop w i =
+        let val s = NC.getstr i 256 before NC.clear i
+        in  if s <> "" then
+                (NC.putstr w (s ^ "\n");
+                NC.update w;
+                NC.flush ();
+                loop w i)
+            else ()
+        end
 in  NC.box mw;
     NC.move mw (NC.Pos (0, 2));
     NC.putstr mw "///+. M A I N  M E N U .+\\\\\\";
+    NC.scrolling menu;
+    NC.putstr menu "This is a menu.\n";
+    NC.putstr menu "This is a menu line.\n";
     NC.aborder tw NC.Acs.VLINE NC.Acs.VLINE NC.Acs.HLINE NC.Acs.HLINE NC.Acs.LTEE NC.Acs.RTEE NC.Acs.LLCORNER NC.Acs.LRCORNER;
     NC.move tw (NC.Pos (0, 2));
     NC.putstr tw "\\\\\\+. S Y S T E M  S T A T U S .+///";
@@ -242,12 +284,14 @@ in  NC.box mw;
     NC.update tw;
     NC.update sw;
     NC.update pw;
+    NC.update menu;
     NC.flush ();
-    NC.putstr iw (NC.getstr iw 256);
+    loop menu iw;
+    NC.putstr iw (NC.readline pw);
     NC.getche iw;
-    NC.getch pw;
     NC.delwin iw;
     NC.delwin pw;
+    NC.delwin menu;
     NC.delwin mw;
     NC.delwin sw;
     NC.shutdown ()

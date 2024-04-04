@@ -98,6 +98,11 @@ int MFFI_ACS_BSBS(void) { return ACS_BSBS; }
 int MFFI_ACS_SBSB(void) { return ACS_SBSB; }
 int MFFI_ACS_SSSS(void) { return ACS_SSSS; }
 
+int MFFI_LINES(void) { return LINES; }
+int MFFI_COLS(void) { return COLS; }
+
+int MFFI_KEY_RESIZE(void) { return KEY_RESIZE; }
+
 static int
 try(int status, const char *fmt, ...)
 {
@@ -141,6 +146,8 @@ void mffi_noecho(void) { try(noecho(), "noecho failed\n"); }
 void mffi_echo(void) { try(echo(), "echo failed\n"); }
 void mffi_cbreak(void) { try(cbreak(), "cbreak failed\n"); }
 void mffi_wclear(void *win) { try(wclear(win), "clear failed\n"); }
+void mffi_idlok(void *win) { try(idlok(win, TRUE), "idlok failed\n"); }
+void mffi_scrollok(void *win) { try(scrollok(win, TRUE), "idlok failed\n"); }
 void mffi_delwin(void *win) { try(delwin(win), "delwin failed\n"); }
 void mffi_endwin(void) { try(endwin(), "endwin failed\n"); }
 void mffi_wmove(void *win, int y, int x) { try(wmove(win, y, x), "wmove failed\n"); }
@@ -181,6 +188,7 @@ void mffi_wrefresh(void *win) { try(wrefresh(win), "wrefresh failed\n"); }
 void mffi_wnoutrefresh(void *win) { try(wnoutrefresh(win), "wnoutrefresh failed\n"); }
 void mffi_doupdate(void) { try(doupdate(), "doupdate failed\n"); }
 void mffi_touchwin(void *win) { WINDOW *w = win; try(touchwin(w), "touchwin failed\n"); }
+void mffi_resizeterm(int h, int w) { try(resizeterm(h, w), "resizeterm failed\n"); }
 
 int mffi_has_colors(void) { return has_colors() == TRUE; }
 void mffi_start_color(void) { try(start_color(), "start_color failed\n"); }
